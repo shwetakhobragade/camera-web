@@ -4,27 +4,40 @@
   <title>Camera Capture</title>
 </head>
 <body>
-  <video id="video" autoplay playsinline></video>
+  <h1>Camera Capture App</h1>
+  <video id="video" autoplay playsinline width="640" height="480"></video>
+  <br/>
   <button id="capture">Capture</button>
+  <br/>
+  <img id="preview" src="" alt="Captured image will appear here" style="margin-top: 10px; width: 300px;"/>
 
   <script>
-    // Access camera
+    // Start camera
     navigator.mediaDevices.getUserMedia({ video: true })
       .then((stream) => {
-        document.getElementById("video").srcObject = stream;
+        const video = document.getElementById("video");
+        video.srcObject = stream;
+      })
+      .catch((err) => {
+        alert("Camera not supported or permission denied.");
+        console.error(err);
       });
 
-    // Capture button logic
-    document.getElementById("capture").addEventListener("click", () => {
-      const video = document.getElementById("video");
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0);
-      const dataURL = canvas.toDataURL("image/jpeg");
-      localStorage.setItem("capturedImage", dataURL);
-      alert("Image captured and sent to Salesforce!");
+    // Capture image
+    document.addEventListener("DOMContentLoaded", () => {
+      const captureBtn = document.getElementById("capture");
+      captureBtn.addEventListener("click", () => {
+        const video = document.getElementById("video");
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataURL = canvas.toDataURL("image/jpeg");
+        localStorage.setItem("capturedImage", dataURL);
+        document.getElementById("preview").src = dataURL;
+        alert("Image captured and saved!");
+      });
     });
   </script>
 </body>
