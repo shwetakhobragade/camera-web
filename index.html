@@ -32,5 +32,19 @@
             console.log("Captured image base64:", image);
         }
     </script>
+    <script>
+  document.getElementById("capture").addEventListener("click", () => {
+    const video = document.getElementById("video");
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+    const dataURL = canvas.toDataURL("image/jpeg");
+    localStorage.setItem("capturedImage", dataURL);
+    alert("Image captured and sent to Salesforce!");
+  });
+</script>
+
 </body>
 </html>
