@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Camera App</title>
+</head>
+<body>
+    <h2>Camera App</h2>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button onclick="capture()">Capture</button>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                alert("Camera not supported or permission denied.");
+                console.error(err);
+            });
+
+        function capture() {
+            const canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0);
+            const image = canvas.toDataURL('image/jpeg');
+
+            // You can send this image somewhere or show it
+            console.log("Captured image base64:", image);
+        }
+    </script>
+</body>
+</html>
