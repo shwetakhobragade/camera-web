@@ -1,61 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Smart Face Capture</title>
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2"></script>
-  <style>
-    video, img {
-      border: 1px solid black;
-      margin-top: 10px;
-    }
-  </style>
+  <title>Camera Capture with Face Detection</title>
 </head>
 <body>
-  <h1>Face Detection Camera</h1>
-  <video id="video" width="640" height="480" autoplay muted></video>
+  <h1>Camera Capture App</h1>
+
+  <video id="video" autoplay playsinline width="640" height="480"></video>
   <br />
   <button id="capture">Capture</button>
   <br />
-  <img id="preview" width="300" alt="Captured image appears here" />
+  <img id="preview" src="" alt="Captured image will appear here" style="margin-top: 10px; width: 300px;" />
 
   <script>
-    const video = document.getElementById("video");
+    // Start camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        const video = document.getElementById("video");
+        video.srcObject = stream;
+      })
+      .catch((err) => {
+        alert("Camera not supported or permission denied.");
+        console.error(err);
+      });
 
-    // Load face-api.js models from public CDN
-    Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights'),
-    ]).then(startVideo).catch(console.error);
+    document.addEventListener("DOMContentLoaded", () => {
+      const captureBtn = document.getElementById("capture");
+      captureBtn.addEventListener("click", async () => {
+        const video = document.getElementById("video");
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    function startVideo() {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          video.srcObject = stream;
-        })
-        .catch(err => {
-          alert("⚠️ Could not access camera. Please allow permission and use HTTPS.");
-          console.error(err);
-        });
-    }
-
-    document.getElementById("capture").addEventListener("click", async () => {
-      const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
-      if (detections.length === 0) {
-        alert("❌ No face detected. Try again.");
-        return;
-      }
-
-      // Draw frame from video
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      const dataURL = canvas.toDataURL("image/jpeg");
-      localStorage.setItem("capturedImage", dataURL);
-      document.getElementById("preview").src = dataURL;
-
-      alert("✅ Face detected and image captured!");
+        // Check for face detection support
+        if ('FaceDetector' in window) {
+          console.log("✅ FaceDetector supported");
+          const faceDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+          try {
+            const faces = await faceDetector.detect(canvas);
+            console.log("Detected faces:", faces);
+            if (faces.length > 0) {
+              const dataURL = canvas.toDataURL("image/jpeg");
+              localStorage.setItem("capturedImage", dataURL);
+              document.getElementById("preview").src = dataURL;
+              alert("✅ Face detected and image captured!");
+            } else {
+              alert("❌ No face detected. Try again.");
+            }
+          } catch (error) {
+            console.error("Face detection failed:", error);
+            alert("⚠️ Face detection error.");
+          }
+        } else {
+          alert("❌ FaceDetector not supported in this browser. Please use Chrome or Edge (desktop).");
+        }
+      });
     });
   </script>
 </body>
