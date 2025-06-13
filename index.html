@@ -1,47 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Smart Face Detection Camera</title>
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+  <title>Smart Face Capture</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2"></script>
+  <style>
+    video, img {
+      border: 1px solid black;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Camera Capture App with Face Detection</h1>
-  <video id="video" autoplay playsinline width="640" height="480" style="border: 1px solid black;"></video>
+  <h1>Face Detection Camera</h1>
+  <video id="video" width="640" height="480" autoplay muted></video>
   <br />
   <button id="capture">Capture</button>
   <br />
-  <img id="preview" alt="Captured image will appear here" style="margin-top: 10px; width: 300px;" />
+  <img id="preview" width="300" alt="Captured image appears here" />
 
   <script>
-    // Load face detection model
-    Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js/models')
-    ]).then(startCamera);
+    const video = document.getElementById("video");
 
-    function startCamera() {
+    // Load face-api.js models from public CDN
+    Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights'),
+    ]).then(startVideo).catch(console.error);
+
+    function startVideo() {
       navigator.mediaDevices.getUserMedia({ video: true })
-        .then((stream) => {
-          const video = document.getElementById("video");
+        .then(stream => {
           video.srcObject = stream;
         })
-        .catch((err) => {
-          alert("Camera not supported or permission denied.");
+        .catch(err => {
+          alert("⚠️ Could not access camera. Please allow permission and use HTTPS.");
           console.error(err);
         });
     }
 
     document.getElementById("capture").addEventListener("click", async () => {
-      const video = document.getElementById("video");
-
-      // Detect face
-      const detection = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
-
-      if (detection.length === 0) {
-        alert("❌ No face detected. Please try again.");
+      const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
+      if (detections.length === 0) {
+        alert("❌ No face detected. Try again.");
         return;
       }
 
-      // Face found – capture image
+      // Draw frame from video
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -52,7 +55,7 @@
       localStorage.setItem("capturedImage", dataURL);
       document.getElementById("preview").src = dataURL;
 
-      alert("✅ Face detected! Image captured.");
+      alert("✅ Face detected and image captured!");
     });
   </script>
 </body>
