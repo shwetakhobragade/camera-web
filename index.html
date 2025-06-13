@@ -1,46 +1,63 @@
-<script>
-  // Start camera
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then((stream) => {
-      const video = document.getElementById("video");
-      video.srcObject = stream;
-    })
-    .catch((err) => {
-      alert("Camera not supported or permission denied.");
-      console.error(err);
-    });
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Camera Capture with Face Detection</title>
+</head>
+<body>
+  <h1>Camera Capture App</h1>
 
-  // Face detection and image capture
-  document.addEventListener("DOMContentLoaded", () => {
-    const captureBtn = document.getElementById("capture");
+  <video id="video" autoplay playsinline width="640" height="480"></video>
+  <br />
+  <button id="capture">Capture</button>
+  <br />
+  <img id="preview" src="" alt="Captured image will appear here" style="margin-top: 10px; width: 300px;" />
 
-    captureBtn.addEventListener("click", async () => {
-      const video = document.getElementById("video");
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  <script>
+    // Start camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        const video = document.getElementById("video");
+        video.srcObject = stream;
+      })
+      .catch((err) => {
+        alert("Camera not supported or permission denied.");
+        console.error(err);
+      });
 
-      if ('FaceDetector' in window) {
-        const faceDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
-        try {
-          const faces = await faceDetector.detect(canvas);
-          if (faces.length > 0) {
-            const dataURL = canvas.toDataURL("image/jpeg");
-            localStorage.setItem("capturedImage", dataURL);
-            document.getElementById("preview").src = dataURL;
-            alert("✅ Face detected! Image captured.");
-          } else {
-            alert("❌ No face detected. Please try again.");
+    document.addEventListener("DOMContentLoaded", () => {
+      const captureBtn = document.getElementById("capture");
+      captureBtn.addEventListener("click", async () => {
+        const video = document.getElementById("video");
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Check for face detection support
+        if ('FaceDetector' in window) {
+          console.log("✅ FaceDetector supported");
+          const faceDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+          try {
+            const faces = await faceDetector.detect(canvas);
+            console.log("Detected faces:", faces);
+            if (faces.length > 0) {
+              const dataURL = canvas.toDataURL("image/jpeg");
+              localStorage.setItem("capturedImage", dataURL);
+              document.getElementById("preview").src = dataURL;
+              alert("✅ Face detected and image captured!");
+            } else {
+              alert("❌ No face detected. Try again.");
+            }
+          } catch (error) {
+            console.error("Face detection failed:", error);
+            alert("⚠️ Face detection error.");
           }
-        } catch (err) {
-          alert("Face detection failed.");
-          console.error(err);
+        } else {
+          alert("❌ FaceDetector not supported in this browser. Please use Chrome or Edge (desktop).");
         }
-      } else {
-        alert("Face detection is not supported in this browser.");
-      }
+      });
     });
-  });
-</script>
+  </script>
+</body>
+</html>
